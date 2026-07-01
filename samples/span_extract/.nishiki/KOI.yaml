@@ -1,0 +1,58 @@
+# KOI.yaml — Nishiki run spec for the span_extract sample.
+#
+# ▼ KOI = achieved KPI ÷ cost = quality per dollar (the AI version of ROI).
+# ▼ floors (cutoff) = the must-hit quality line. Kills the "cheaper is always better" trap and
+#   surfaces the most cost-efficient candidate among those that clear the bar.
+#
+# This is a NON-classification task: we score how well each model reproduces the gold answer span
+# (span-overlap F1), not whether it picked the right label.
+
+target: span_extract
+task_type: extraction        # extraction = extract the relevant span from text → span F1
+
+mode: 2                      # 2 = gold annotations (the dataset's answer spans)
+
+# new task = no current route → measure by absolute quality (match against gold). No 1.0x baseline.
+
+# ── gold (reference data) = the sample's SQuAD-format answer spans ──
+gold:
+  source: file
+  data: gold.json            # relative to the sample dir (run commands from samples/span_extract/)
+  read_only: true
+
+# ── injection point (choke) = where candidate models are spliced in (runtime memory only) ──
+injection:
+  choke: agent:extract_span
+
+# ── generic adapter run config (read by GenericAdapter; no target-specific glue needed) ──
+run:
+  gold_format: squad         # loader: squad / jsonl
+  parser: locate_spans       # response → pred spans: locate verbatim fragments in the context
+  prompt: |
+    Extract the exact span of text from the passage that answers the question.
+    Copy it verbatim from the passage — do not paraphrase or add words.
+    If the passage does not answer the question, reply with NONE.
+
+    Question: {question}
+
+    Passage:
+    {context}
+
+    Answer span:
+
+# ── candidates (what we measure this run. Full menu is in MODELS.yaml) ──
+candidates: [gpt54pro, gpt4, glm46, deepseek]
+
+residency_bar: unrestricted   # sample data is public → external routes allowed
+
+# ── scoring + KOI = "KPI ÷ cost" + cutoff ──
+scorer:
+  kpi: span_f1               # extraction span-overlap F1 (language-neutral)
+
+koi:
+  formula: "kpi / cost_per_item"   # passers of the cutoff only, ordered cheapest-for-the-quality
+
+# ── cutoff (SLA): candidates that fail the floor are disqualified before ranking ──
+floors:
+  kpi_floor: 0.55            # a candidate must reach span-F1 ≥ 0.55 to qualify
+  # non-classification uses kpi_floor only (ng_recall_floor is classification-specific)

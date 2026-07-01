@@ -1,0 +1,45 @@
+# Secrets / credentials (never commit — repo is public)
+.env
+.env.*
+# the template (no real values) IS tracked
+!.env.example
+*.pem
+*.key
+credentials.json
+service-account*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+
+# Nishiki measurement state (per-target profiles + runs are generated, not source)
+.nishiki/
+**/.nishiki/
+# EXCEPTION: bundled sample profiles ship their measured results so a fresh clone can do
+# `cd samples/<name> && nishiki koi-report --web` (the dashboard replays them — no key, no model
+# calls). Re-include the whole sample profile dir, then re-exclude the noise: secrets (.env is
+# already ignored above), runtime logs, the re-runnable last_run pointer, and the static HTML
+# report (regenerated on demand by `koi-report` — the dashboard URL is the one UI we ship).
+!samples/**/.nishiki/
+samples/**/.nishiki/*.log
+samples/**/.nishiki/*.html
+samples/**/.nishiki/last_run.json
+
+# Datasets / weights (license-encumbered, large — never commit)
+data/
+datasets/
+*.json.gz
+CUADv1.json
+
+# Internal docs (design notes / blog draft / release backlog — NOT for the public repo)
+docs/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store

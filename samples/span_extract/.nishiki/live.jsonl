@@ -1,0 +1,6 @@
+{"model": "deepseek/deepseek-v4-pro", "in_tokens": 97, "out_tokens": 56, "ts": 1782872864.3688679, "latency_ms": 2659}
+{"model": "deepseek/deepseek-v4-pro", "in_tokens": 98, "out_tokens": 230, "ts": 1782872868.1120162, "latency_ms": 3740}
+{"model": "deepseek/deepseek-v4-pro", "in_tokens": 100, "out_tokens": 49, "ts": 1782872871.195746, "latency_ms": 3080}
+{"model": "deepseek/deepseek-v4-pro", "in_tokens": 94, "out_tokens": 221, "ts": 1782872874.8294795, "latency_ms": 3631}
+{"model": "deepseek/deepseek-v4-pro", "in_tokens": 90, "out_tokens": 47, "ts": 1782872877.3718789, "latency_ms": 2540}
+{"model": "deepseek/deepseek-v4-pro", "in_tokens": 94, "out_tokens": 17, "ts": 1782872878.827315, "latency_ms": 1444}

@@ -1,0 +1,51 @@
+# KOI.yaml — Nishiki run spec for target cuad (contract-clause extraction) (canonical reference profile).
+# The blueprint for "how Nishiki measures this target" (design doc §18.9). **A non-classification KPI example.**
+#
+# ▼ Differences from example_target (classification = verdict match):
+#   - task = extraction. KPI = span F1 (continuous scalar 0..1). No verdict, no NG.
+#   - gold  = CUAD expert-annotated spans (a file, not a DB batch). mode is human-label equivalent (=2).
+#   - floors = kpi_floor only (ng_recall_floor is classification-only, so it is omitted).
+#   - reference = none (a thin self-built agent = no "current" exists). No 1.0x-vs-current figure.
+#     → ranking is the absolute value of KOI=F1÷cost. Pick "the model that delivers the same quality cheapest."
+
+target: cuad
+mode: 2                       # 2=human label (CUAD expert annotations are gold). No mode1 "current=ceiling" constraint.
+
+# ── gold (reference data) = CUAD annotations. Real data is kept only on your data host (keep real data off the repo) ──
+gold:
+  source: file               # SQuAD-format JSON (data[].paragraphs[].qas[].answers[].answer_start)
+  data: /path/to/CUADv1.json   # path where CUAD v1 is placed (passed to NZ_DATA)
+  stats: "510 contracts × 41 clause questions = 20,910 qas. 68% of them are is_impossible (no such clause)"
+  balance: true              # ★ balance applicable/not-applicable (NZ_BALANCE=1). Corrects do-nothing (always NONE) to ≈0.5
+  license: "CUAD v1 — CC BY 4.0 (The Atticus Project). Observe attribution"
+  read_only: true
+
+# ── injection point (choke point) = where the candidate model is plugged in = one function of our thin agent ──
+injection:
+  choke: cuad_calibrate:extract_clause
+  how: |
+    Thin self-built agent (adapters/cuad/calibrate.py). choke=extract_clause sends
+    (full contract, clause question) to the LLM once and "extracts the relevant verbatim span".
+    The candidate model is swapped at runtime via NZ_CATALOG (produced by calibrate-env) = code unchanged.
+  cost_locus: One LLM chat/completions call (full contract = input tokens dominate).
+
+# ── candidates (the targets measured this time; full menu is in MODELS.yaml) ────────────────
+# Deterministic selection by price cutoff (quality is decided by probe=measurement). Cheapest first.
+candidates: [gpt-5-nano, llama-4-scout, qwen3-vl]
+# reference: none (self-built agent = no current path exists). KOI ranks by the absolute value of F1÷cost.
+
+# ── data residency (cross-border policy) ──────────────────────────────────
+residency_bar: unrestricted  # CUAD is public data = OpenRouter cross-border OK (not sensitive data)
+
+# ── scoring + KOI = "KPI ÷ cost" + cutoff ───────────────────────
+scorer:
+  kpi: span_f1               # non-classification scalar KPI = extracted-span F1 (scoring.span_overlap_f1)
+
+koi:
+  formula: "kpi / cost_per_item"   # among those that pass the cutoff, rank by who delivers F1 cheapest
+
+# ── cutoff (SLA) = dynamically selected via the on-screen slider. Non-classification has kpi_floor only ──
+floors:
+  kpi_floor: 0.55            # floor above the post-balance do-nothing (always NONE) ≈0.5 = fails the "did nothing" trap
+  # ng_recall_floor is omitted (classification-only). koi-report also hides the NG slider when ng is absent.
+  # ※ With balance=false, do-nothing rises to ≈0.68 → in that case raise kpi_floor to 0.7+ as well.

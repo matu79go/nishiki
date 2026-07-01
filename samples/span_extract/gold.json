@@ -1,0 +1,257 @@
+{
+  "version": "span_extract-sample-1.0",
+  "data": [
+    {
+      "title": "amazon",
+      "paragraphs": [
+        {
+          "context": "The Amazon River is the largest river by discharge volume of water in the world. It flows through South America and empties into the Atlantic Ocean near the equator.",
+          "qas": [
+            {
+              "id": "amazon-0",
+              "question": "Which ocean does the Amazon River empty into?",
+              "answers": [
+                {
+                  "text": "the Atlantic Ocean",
+                  "answer_start": 129
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "everest",
+      "paragraphs": [
+        {
+          "context": "Mount Everest is the highest mountain above sea level, reaching about 8,849 metres. It sits on the border between Nepal and the Tibet Autonomous Region of China.",
+          "qas": [
+            {
+              "id": "everest-1",
+              "question": "How tall is Mount Everest above sea level?",
+              "answers": [
+                {
+                  "text": "about 8,849 metres",
+                  "answer_start": 64
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "photosynthesis",
+      "paragraphs": [
+        {
+          "context": "Photosynthesis is the process by which green plants convert light energy into chemical energy. The process takes place mainly in the chloroplasts and releases oxygen as a by-product.",
+          "qas": [
+            {
+              "id": "photosynthesis-2",
+              "question": "What gas is released as a by-product of photosynthesis?",
+              "answers": [
+                {
+                  "text": "oxygen",
+                  "answer_start": 159
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "water",
+      "paragraphs": [
+        {
+          "context": "Water is a chemical compound made of two hydrogen atoms and one oxygen atom. At standard atmospheric pressure it boils at 100 degrees Celsius.",
+          "qas": [
+            {
+              "id": "water-3",
+              "question": "At what temperature does water boil at standard atmospheric pressure?",
+              "answers": [
+                {
+                  "text": "100 degrees Celsius",
+                  "answer_start": 122
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "printing",
+      "paragraphs": [
+        {
+          "context": "The printing press was developed by Johannes Gutenberg in the fifteenth century. It allowed books to be produced far more quickly than by hand copying.",
+          "qas": [
+            {
+              "id": "printing-4",
+              "question": "Who developed the printing press?",
+              "answers": [
+                {
+                  "text": "Johannes Gutenberg",
+                  "answer_start": 36
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "moon",
+      "paragraphs": [
+        {
+          "context": "The Moon is the only natural satellite of the Earth. It takes roughly 27.3 days to complete one orbit around our planet.",
+          "qas": [
+            {
+              "id": "moon-5",
+              "question": "How long does the Moon take to orbit the Earth?",
+              "answers": [
+                {
+                  "text": "roughly 27.3 days",
+                  "answer_start": 62
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "penicillin",
+      "paragraphs": [
+        {
+          "context": "Penicillin was discovered by Alexander Fleming in 1928 when he noticed that a mould had killed the bacteria on one of his culture plates.",
+          "qas": [
+            {
+              "id": "penicillin-6",
+              "question": "In what year was penicillin discovered?",
+              "answers": [
+                {
+                  "text": "1928",
+                  "answer_start": 50
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "sahara",
+      "paragraphs": [
+        {
+          "context": "The Sahara is the largest hot desert in the world, covering much of North Africa. Its total area is comparable to that of the United States.",
+          "qas": [
+            {
+              "id": "sahara-7",
+              "question": "On which continent is the Sahara located?",
+              "answers": [
+                {
+                  "text": "North Africa",
+                  "answer_start": 68
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "light",
+      "paragraphs": [
+        {
+          "context": "In a vacuum, light travels at a constant speed of about 299,792 kilometres per second. Nothing carrying information can travel faster than this limit.",
+          "qas": [
+            {
+              "id": "light-8",
+              "question": "How fast does light travel in a vacuum?",
+              "answers": [
+                {
+                  "text": "about 299,792 kilometres per second",
+                  "answer_start": 50
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "pacific",
+      "paragraphs": [
+        {
+          "context": "The Pacific Ocean is the largest and deepest of Earth's oceans. Its deepest known point is the Challenger Deep in the Mariana Trench.",
+          "qas": [
+            {
+              "id": "pacific-9",
+              "question": "What is the deepest known point of the Pacific Ocean?",
+              "answers": [
+                {
+                  "text": "the Challenger Deep",
+                  "answer_start": 91
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "dna",
+      "paragraphs": [
+        {
+          "context": "DNA carries the genetic instructions used in the growth and functioning of living organisms. Its double-helix structure was described by Watson and Crick in 1953.",
+          "qas": [
+            {
+              "id": "dna-10",
+              "question": "Who described the double-helix structure of DNA?",
+              "answers": [
+                {
+                  "text": "Watson and Crick",
+                  "answer_start": 137
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "volcano",
+      "paragraphs": [
+        {
+          "context": "A volcano is a rupture in the crust of a planet that allows molten rock to escape. The molten rock that reaches the surface is called lava.",
+          "qas": [
+            {
+              "id": "volcano-11",
+              "question": "What is molten rock called once it reaches the surface?",
+              "answers": [
+                {
+                  "text": "lava",
+                  "answer_start": 134
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

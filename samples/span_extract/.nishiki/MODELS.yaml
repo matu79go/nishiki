@@ -1,0 +1,45 @@
+# MODELS.yaml — candidate menu for the span_extract sample.
+# Prices are USD per **million** tokens (in / out), taken from the live OpenRouter catalog
+# (`nishiki models`, no key). Keys are short handles; model_id is the real route slug.
+# Spanning the price ladder so KOI (quality ÷ cost) has something to rank.
+models:
+  gpt54pro:
+    origin: openrouter
+    model_id: "openai/gpt-5.4-pro"
+    call: openai_compatible
+    in: 30.0
+    out: 180.0
+    tier: high
+    life: ACTIVE
+    quality_hint: unknown
+    note: "frontier baseline — most expensive"
+  gpt4:
+    origin: openrouter
+    model_id: "openai/gpt-4"
+    call: openai_compatible
+    in: 30.0
+    out: 60.0
+    tier: high
+    life: ACTIVE
+    quality_hint: unknown
+    note: "older frontier"
+  glm46:
+    origin: openrouter
+    model_id: "z-ai/glm-4.6"
+    call: openai_compatible
+    in: 0.4
+    out: 1.7
+    tier: mid
+    life: ACTIVE
+    quality_hint: unknown
+    note: "cheap challenger (~75x cheaper input than the frontier)"
+  deepseek:
+    origin: openrouter
+    model_id: "deepseek/deepseek-v4-pro"
+    call: openai_compatible
+    in: 0.4
+    out: 0.9
+    tier: mid
+    life: ACTIVE
+    quality_hint: unknown
+    note: "cheap challenger"

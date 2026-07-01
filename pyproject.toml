@@ -1,0 +1,29 @@
+# nishiki — the KOI optimizer. A self-contained src-layout package.
+# Run `pip install -e .` to get the `nishiki` command.
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nishiki"
+version = "0.1.0"
+description = "KOI optimizer — measure and maximize the KPI on Investment (AI ROI) of an existing AI agent"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+dependencies = ["pyyaml>=6.0"]
+
+[project.optional-dependencies]
+# Used by Bedrock catalog fetching (fetch_bedrock_catalog). Not needed for the openrouter source only.
+bedrock = ["boto3"]
+
+[project.scripts]
+nishiki = "nishiki.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+# The playbook (the procedure handed to the orchestrator AI) and the vendored uPlot assets
+# (served by `nishiki live --web`) ship as package data.
+nishiki = ["playbooks/*.md", "vendor/uplot/*", "vendor/*.png"]
