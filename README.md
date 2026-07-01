@@ -151,9 +151,9 @@ spend** — run it before any paid measurement.
 
 ## Live KOI — watch quality-per-dollar in real time
 
-![Live KOI HUD updating per call](assets/koi_live.gif)
+![The live KOI dashboard updating per call](assets/koi_dashboard_live.gif)
 
-*The HUD updating per call as an agent processes items — estimated, no model calls. ([full video](assets/koi_live.mp4))*
+*The browser dashboard updating live as an agent runs — cumulative cost, average KOI, and per-call charts move with each call, estimated with no model calls. ([full video](assets/koi_dashboard_live.mp4))*
 
 Once you've measured, Nishiki can sit beside your **running** agent and show the KOI of each real call —
 **instantly, with no model calls and no charges**. Cost is computed locally (the call's token count ×
