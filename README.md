@@ -137,6 +137,24 @@ target (the same gold/batch as before, or a new one) and the mode (cheap probe v
 you can also answer freely, then runs it. The previous models live in `KOI.yaml`; the last run's settings
 are remembered in `.nishiki/last_run.json`. (`nishiki start` still works if you prefer to type it.)
 
+## Examples
+
+Two runnable examples ship with the repo — a turnkey one, and a bespoke-adapter reference:
+
+- **`samples/span_extract/`** — turnkey, self-contained, **no API key**. A span-extraction agent with a
+  bundled measured run; open the KOI dashboard in one command:
+  ```bash
+  cd samples/span_extract
+  nishiki koi-report --web        # replays the bundled results — no key, no model calls
+  ```
+- **`adapters/cuad/`** — a **bespoke adapter** on the public CUAD benchmark (contract-clause extraction,
+  CC-BY 4.0). It shows the per-target-glue pattern; **bring your own `CUADv1.json`** (from
+  [The Atticus Project](https://www.atticusprojectai.org/cuad)) and a key:
+  ```bash
+  NZ_MODE=probe NZ_DATA=/path/to/CUADv1.json OPENROUTER_API_KEY=… python "$(nishiki adapter-path cuad)"
+  ```
+  See the header of `adapters/cuad/calibrate.py` for the full run steps.
+
 ## Under the hood (the CLI the orchestrator runs)
 
 ```bash
