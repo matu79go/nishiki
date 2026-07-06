@@ -139,7 +139,7 @@ are remembered in `.nishiki/last_run.json`. (`nishiki start` still works if you 
 
 ## Examples
 
-Two runnable examples ship with the repo — a turnkey one, and a bespoke-adapter reference:
+Three runnable examples ship with the repo — two turnkey ones and a bespoke-adapter reference:
 
 - **`samples/span_extract/`** — turnkey, self-contained, **no API key**. A span-extraction agent with a
   bundled measured run; open the KOI dashboard in one command:
@@ -147,6 +147,17 @@ Two runnable examples ship with the repo — a turnkey one, and a bespoke-adapte
   cd samples/span_extract
   nishiki koi-report --web        # replays the bundled results — no key, no model calls
   ```
+- **`samples/text_to_sql/`** — turnkey, **no API key**. A text-to-SQL analytics agent: each candidate's
+  SQL is run read-only against a synthetic DB and scored on whether it returns the right rows. The
+  bundled run shows *why KOI isn't just "pick the cheapest"* — the cheapest model has the highest raw
+  KOI yet is disqualified by the quality floor, and the winner is the best quality-per-dollar above the
+  bar (not the frontier, not the cheapest).
+  ```bash
+  cd samples/text_to_sql
+  nishiki koi-report --web        # replays the bundled results — no key, no model calls
+  ```
+  Full write-up with charts and the measurement walkthrough:
+  [Measuring KOI on a Text-to-SQL agent](https://suzuki-shoten.dev/blog/text-to-sql-koi/).
 - **`adapters/cuad/`** — a **bespoke adapter** on the public CUAD benchmark (contract-clause extraction,
   CC-BY 4.0). It shows the per-target-glue pattern; **bring your own `CUADv1.json`** (from
   [The Atticus Project](https://www.atticusprojectai.org/cuad)) and a key:

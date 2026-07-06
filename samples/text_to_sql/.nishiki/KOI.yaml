@@ -1,0 +1,63 @@
+# KOI.yaml — Nishiki run spec for the text_to_sql sample.
+#
+# ▼ KOI = achieved KPI ÷ cost = quality per dollar (the AI version of ROI).
+# ▼ floors (cutoff) = the must-hit quality line. Kills the "cheaper is always better" trap and
+#   surfaces the most cost-efficient candidate among those that clear the bar.
+#
+# This is a text-to-SQL task: each candidate turns a natural-language business question into SQL,
+# we RUN that SQL read-only against shop.db, and score 1.0 iff its result set equals the gold answer's
+# (execution accuracy — "did the generated query actually return the right rows"), not string overlap.
+
+target: text_to_sql
+task_type: sql               # sql = generate a query, execute it, match the result set → sql_result_match
+
+mode: 2                      # 2 = gold annotations (the gold SQL's result set)
+
+# new task = no current route → measure by absolute quality (execution accuracy). No 1.0x baseline.
+
+# ── gold (reference data) = business questions + their gold SQL (result sets computed at load) ──
+gold:
+  source: file
+  data: gold.jsonl           # relative to the sample dir (run commands from samples/text_to_sql/)
+  read_only: true
+
+# ── injection point (choke) = where candidate models are spliced in (runtime memory only) ──
+injection:
+  choke: agent:generate_sql
+
+# ── generic adapter run config (read by GenericAdapter; no target-specific glue needed) ──
+run:
+  gold_format: sql           # loader: reads {question, gold_sql}, introspects the DB schema, runs gold SQL
+  parser: sql                # response → extract SQL, run it read-only against shop.db, return its rows
+  prompt: |
+    You are a SQL analyst. Given a SQLite database schema and a question, write ONE SQLite
+    SELECT query that answers it. Output only the SQL — no explanation, no markdown fences.
+
+    Schema:
+    {schema}
+
+    Question: {question}
+
+    SQL:
+
+# ── candidates (what we measure this run. Full menu is in MODELS.yaml) ──
+# llama3b is the cheapest of all — included on purpose so the run shows that the naive "pick the
+# cheapest" choice is disqualified by the quality floor, while KOI picks the best quality-per-dollar.
+candidates: [gpt54pro, gpt4, glm46, deepseek, llama3b]
+
+residency_bar: unrestricted   # synthetic sample data is public → external routes allowed
+
+# ── scoring + KOI = "KPI ÷ cost" + cutoff ──
+scorer:
+  kpi: sql_result_match      # 1/0 on execution-result-set equality (pass rate = fraction correct)
+
+koi:
+  formula: "kpi / cost_per_item"   # passers of the cutoff only, ordered cheapest-for-the-quality
+
+# ── cutoff (SLA): candidates that fail the floor are disqualified before ranking ──
+floors:
+  kpi_floor: 0.8            # SLA: a candidate must answer ≥ 80% of questions correctly to qualify.
+  # This is the guard that makes KOI ≠ "cheapest": the near-free llama3b has the highest RAW KOI but
+  # only 7% correct, so the floor disqualifies it (and glm46 at 57%). Among models that clear the bar,
+  # KOI then picks the best quality-per-dollar (deepseek).
+  # non-classification uses kpi_floor only (ng_recall_floor is classification-specific)

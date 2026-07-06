@@ -113,8 +113,10 @@ def test_scorer_registry():
     assert scoring.get_scorer("label_match")("a", "a") == 1.0
     assert scoring.get_scorer("label_match")("a", "b") == 0.0
     assert scoring.get_scorer("span_f1")([(0, 10)], [(0, 10)]) == 1.0
+    assert scoring.get_scorer("sql_result_match") is scoring.sql_result_match
     assert scoring.TASK_SCORER["classification"] == "label_match"
     assert scoring.TASK_SCORER["extraction"] == "span_f1"
+    assert scoring.TASK_SCORER["sql"] == "sql_result_match"
     try:
         scoring.get_scorer("nope")
         assert False, "no exception raised for unknown name"
@@ -123,11 +125,30 @@ def test_scorer_registry():
     print("  ✓ scorer registry: name resolution / task_type mapping / unknown-name error")
 
 
+def test_sql_result_match():
+    """Text-to-SQL execution accuracy = 1.0 iff the result set equals gold (order-insensitive, numeric-tolerant)."""
+    m = scoring.sql_result_match
+    # exact match (order within the set doesn't matter)
+    assert m({"sql": "...", "rows": [[1, "a"], [2, "b"]]}, [[2, "b"], [1, "a"]]) == 1.0
+    # integral-float tolerance: 100.0 == 100
+    assert m({"sql": "...", "rows": [[100.0]]}, [[100]]) == 1.0
+    # both empty (correctly "none") = match
+    assert m({"sql": "...", "rows": []}, []) == 1.0
+    # wrong rows = miss
+    assert m({"sql": "...", "rows": [[3]]}, [[4]]) == 0.0
+    # a query that errored (no rows key) = miss, never a crash
+    assert m({"sql": "bad", "error": "no such table"}, [[1]]) == 0.0
+    assert m(None, [[1]]) == 0.0
+    # column order is significant (a genuinely different SELECT)
+    assert m({"sql": "...", "rows": [["a", 1]]}, [[1, "a"]]) == 0.0
+    print("  ✓ sql_result_match: set equality, numeric tolerance, empty, error/None, column order")
+
+
 def main():
     fails = 0
     for fn in (test_verdict_extras_matches_example_target, test_verdict_extras_no_positive,
                test_aggregate_kpi, test_span_overlap_f1, test_latency_stats,
-               test_scorer_registry):
+               test_scorer_registry, test_sql_result_match):
         try:
             print(f"[{fn.__name__}]")
             fn()
