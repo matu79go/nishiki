@@ -80,7 +80,66 @@ def load_jsonl(path, limit=0, balance=False):
     return items
 
 
-LOADERS = {"squad": load_squad, "jsonl": load_jsonl}
+def _sqlite_schema(db_path):
+    """Read the DB's CREATE TABLE statements (schema text the model needs to write correct SQL)."""
+    import sqlite3
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        rows = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND sql IS NOT NULL ORDER BY name"
+        ).fetchall()
+    finally:
+        conn.close()
+    return "\n".join(r[0] for r in rows)
+
+
+def _run_select(db_path, sql):
+    """Execute a read-only SELECT against the SQLite DB and return rows as lists (raises on any write)."""
+    import sqlite3
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        conn.execute("PRAGMA query_only=ON")
+        return [list(r) for r in conn.execute(sql).fetchall()]
+    finally:
+        conn.close()
+
+
+def load_sql(path, limit=0, balance=False):
+    """Text-to-SQL gold (JSONL of {question, gold_sql, db?}) → items with the DB schema + expected rows.
+
+    The schema is introspected from the SQLite DB (no need to hand-copy CREATE statements into gold),
+    and each item's gold is the **result set of gold_sql** (computed once here, so scoring only has to
+    run the model's SQL and compare). `db` defaults to shop.db next to the gold file. The DB is opened
+    read-only everywhere. `_db` (absolute path, used by parse_sql at run time) is carried on the item but
+    never written to the run JSON (per-item output keeps only id/gold/pred/score/cost).
+    """
+    import json
+    import os
+    base = os.path.dirname(os.path.abspath(path))
+    schema_cache = {}
+    items = []
+    with open(path, encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            line = line.strip()
+            if not line:
+                continue
+            o = json.loads(line)
+            db_abs = os.path.join(base, o.get("db", "shop.db"))
+            if db_abs not in schema_cache:
+                schema_cache[db_abs] = _sqlite_schema(db_abs)
+            items.append({
+                "id": o.get("id", str(i)),
+                "question": o.get("question", ""),
+                "schema": schema_cache[db_abs],
+                "_db": db_abs,
+                "gold": _run_select(db_abs, o["gold_sql"]),
+            })
+            if limit and len(items) >= limit:
+                break
+    return items
+
+
+LOADERS = {"squad": load_squad, "jsonl": load_jsonl, "sql": load_sql}
 
 
 # ───────────────────────── response parsers (LLM response → scorable pred) ──────────────
@@ -155,7 +214,49 @@ def parse_label(item, text, labels=None):
     return t
 
 
-PARSERS = {"locate_spans": parse_locate_spans, "identity": parse_identity, "label": parse_label}
+def _extract_sql(text):
+    """Pull the SQL statement out of a model response (strip ```sql fences / leading prose)."""
+    if not text:
+        return ""
+    t = text.strip()
+    if "```" in t:                                  # fenced block: take the first fenced body
+        parts = t.split("```")
+        if len(parts) >= 2:
+            body = parts[1]
+            if body[:3].lower() == "sql":
+                body = body[3:]
+            t = body.strip()
+    low = t.lower()                                 # else: start at the first SELECT/WITH keyword
+    idx = min((low.find(k) for k in ("select", "with") if low.find(k) >= 0), default=-1)
+    if idx > 0:
+        t = t[idx:]
+    return t.split(";")[0].strip()                  # one statement, no trailing semicolon
+
+
+def parse_sql(item, text):
+    """Text-to-SQL: extract the model's SQL, run it read-only against the item's DB, return {sql, rows|error}.
+
+    Executing here (not in the scorer) keeps the scorer a pure result-set comparison and lets the DB
+    handle come off the item (`_db`), so nothing target-specific leaks into scoring or the run JSON.
+    """
+    sql = _extract_sql(text)
+    db = item.get("_db")
+    out = {"sql": sql}
+    if not sql:
+        out["error"] = "no SQL found in response"
+        return out
+    if db is None:
+        out["error"] = "no DB bound to item"
+        return out
+    try:
+        out["rows"] = _run_select(db, sql)
+    except Exception as e:                          # noqa: BLE001 — any SQL error = a failed (0.0) item
+        out["error"] = str(e)[:200]
+    return out
+
+
+PARSERS = {"locate_spans": parse_locate_spans, "identity": parse_identity,
+           "label": parse_label, "sql": parse_sql}
 
 
 # ───────────────────────── generic adapter ─────────────────────────────────────────────

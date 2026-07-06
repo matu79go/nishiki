@@ -152,6 +152,33 @@ def span_overlap_f1(pred_spans, gold_spans):
     return 2 * prec * rec / (prec + rec)
 
 
+def _sql_canon(rows):
+    """Canonicalize a result set for order-insensitive comparison = sorted list of stringified rows.
+
+    Integral floats collapse to int (100.0 == 100) so numeric formatting doesn't cause false misses.
+    Column order within a row is preserved (a different SELECT order is a genuinely different query).
+    """
+    def cell(c):
+        if isinstance(c, float) and c.is_integer():
+            c = int(c)
+        return "" if c is None else str(c)
+    return sorted(tuple(cell(c) for c in row) for row in (rows or []))
+
+
+def sql_result_match(pred, gold):
+    """Per-item score for a text-to-SQL task = 1.0 iff the generated query's result set equals gold's.
+
+    `pred` is the parsed generation (a dict {sql, rows?, error?} from parse_sql, which already ran the
+    model's SQL against the read-only DB); `gold` is the expected result rows (list of rows). A query
+    that errored or returned nothing comparable scores 0.0. This is execution accuracy: "did the
+    generated code actually run and return the right answer", not string similarity of the SQL.
+    """
+    rows = pred.get("rows") if isinstance(pred, dict) else None
+    if rows is None:
+        return 0.0
+    return 1.0 if _sql_canon(rows) == _sql_canon(gold) else 0.0
+
+
 # ───────────────────────── scoring registry (name → per-item scoring function) ──────────────────
 # Table the generic init / generic adapter uses to look up a scoring function from KOI.yaml's
 # scorer.kpi (string). To measure "the user's KPI, whether classification or not", scoring logic
@@ -160,12 +187,14 @@ def span_overlap_f1(pred_spans, gold_spans):
 SCORERS = {
     "label_match": label_match,     # classification: 1/0 on pred==gold (aggregate = match rate)
     "span_f1": span_overlap_f1,     # extraction: character-span overlap F1 (language-neutral)
+    "sql_result_match": sql_result_match,  # text-to-SQL: 1/0 on execution-result-set equality
 }
 
 # KPI kind (task_type) → default scorer name. init's auto-detection picks the kind, mapped to a scorer here.
 TASK_SCORER = {
     "classification": "label_match",
     "extraction": "span_f1",
+    "sql": "sql_result_match",
 }
 
 

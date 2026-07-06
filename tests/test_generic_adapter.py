@@ -152,11 +152,49 @@ def test_from_koi_closes_loop():
     print("  ✓ [core] build_koi_yaml→from_koi→run (auto-generated KOI.yaml runs directly = zero hand-writing)")
 
 
+def _sql_sample(tmp):
+    """Write a tiny SQLite DB + a text-to-SQL gold.jsonl in tmp; return the gold path."""
+    import sqlite3
+    db = os.path.join(tmp, "shop.db")
+    conn = sqlite3.connect(db)
+    conn.execute("CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, price REAL)")
+    conn.executemany("INSERT INTO products VALUES (?,?,?)",
+                     [(1, "Laptop", 1200.0), (2, "Pen", 5.0), (3, "Desk", 400.0)])
+    conn.commit()
+    conn.close()
+    gold = os.path.join(tmp, "gold.jsonl")
+    with open(gold, "w", encoding="utf-8") as f:
+        f.write(json.dumps({"id": "a", "question": "How many products?",
+                            "gold_sql": "SELECT COUNT(*) FROM products"}) + "\n")
+        f.write(json.dumps({"id": "b", "question": "Products over 100 dollars?",
+                            "gold_sql": "SELECT name FROM products WHERE price > 100"}) + "\n")
+    return gold
+
+
+def test_sql_loader_and_parser():
+    """[core] text-to-SQL loader introspects the schema + precomputes gold rows; parser runs SQL read-only."""
+    with tempfile.TemporaryDirectory() as tmp:
+        gold = _sql_sample(tmp)
+        items = GA.load_sql(gold)
+        assert len(items) == 2
+        assert "CREATE TABLE products" in items[0]["schema"]   # schema introspected from the DB
+        assert items[0]["gold"] == [[3]]                        # COUNT(*) precomputed
+        assert sorted(items[1]["gold"]) == [["Desk"], ["Laptop"]]
+        # parser: a correct (fenced) SQL runs and matches gold
+        pred = GA.parse_sql(items[0], "```sql\nSELECT COUNT(*) FROM products\n```")
+        assert pred["rows"] == [[3]] and GA.scoring.sql_result_match(pred, items[0]["gold"]) == 1.0
+        # a write is refused by the read-only connection = scored 0.0, never mutates the DB
+        bad = GA.parse_sql(items[0], "DELETE FROM products")
+        assert "error" in bad and GA.scoring.sql_result_match(bad, items[0]["gold"]) == 0.0
+    print("  ✓ [core] load_sql (schema + gold rows) / parse_sql (read-only exec) / sql_result_match")
+
+
 def main():
     fails = 0
     for fn in (test_load_squad, test_parsers, test_locate_spans_normalized,
                test_generic_cuad_end_to_end,
-               test_generic_classification, test_from_koi_closes_loop):
+               test_generic_classification, test_from_koi_closes_loop,
+               test_sql_loader_and_parser):
         try:
             print(f"[{fn.__name__}]")
             fn()
